@@ -23,8 +23,11 @@ The pipeline uses **AudioSR** (neural super-resolution) to recover frequencies l
 - Python 3.10-3.12
 - FFmpeg (for audio extraction)
 - AMD GPU with ROCm 6.2+ or NVIDIA GPU with CUDA
+- Or Docker (for containerized usage)
 
 ## Installation
+
+### Native Installation
 
 ```bash
 # Clone repository with submodules
@@ -36,6 +39,21 @@ uv sync
 
 # Set up AudioSR environment (separate venv due to numpy conflicts)
 ./scripts/setup_audiosr.sh
+```
+
+### Docker Installation
+
+```bash
+git clone --recurse-submodules https://github.com/enrell/audio-enhancer.git
+cd audio-enhancer
+
+# Build for your GPU (auto-detected)
+./scripts/docker-run.sh --help
+
+# Or build manually for specific GPU
+docker compose --profile rocm build   # AMD GPU
+docker compose --profile cuda build   # NVIDIA GPU
+docker compose --profile cpu build    # CPU only
 ```
 
 ## Usage
@@ -60,6 +78,21 @@ uv run audio-enhancer input.webm -o output.opus --format opus
 
 ```bash
 uv run audio-enhancer --gui
+```
+
+### Docker
+
+```bash
+# Auto-detect GPU and process file
+./scripts/docker-run.sh input.opus output.flac
+
+# With extra options
+./scripts/docker-run.sh input.mp3 output.flac --denoise --normalize
+
+# Or use docker compose directly (place files in input/ folder)
+mkdir -p input output
+cp myfile.opus input/
+docker compose --profile rocm run --rm audio-enhancer-rocm /input/myfile.opus -o /output/myfile.flac
 ```
 
 ### Options
@@ -137,7 +170,10 @@ audio-enhancer/
 ├── audiosr_env/             # AudioSR runner script
 │   └── run_audiosr.py       # AudioSR subprocess wrapper
 ├── scripts/
-│   └── setup_audiosr.sh     # AudioSR venv setup script
+│   ├── setup_audiosr.sh     # AudioSR venv setup script
+│   └── docker-run.sh        # Docker auto-detect runner
+├── Dockerfile               # Multi-GPU Docker build
+├── docker-compose.yml       # Docker Compose profiles
 └── pyproject.toml
 ```
 

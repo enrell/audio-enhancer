@@ -1,0 +1,79 @@
+# Audio Enhancer - Docker Compose
+# Profiles: rocm (AMD), cuda (NVIDIA), cpu
+#
+# Usage:
+#   Auto-detect GPU:  ./scripts/docker-run.sh input.opus output.flac
+#   Force ROCm:       docker compose --profile rocm run --rm audio-enhancer /input/file.opus -o /output/file.flac
+#   Force CUDA:       docker compose --profile cuda run --rm audio-enhancer /input/file.opus -o /output/file.flac
+#   CPU only:         docker compose --profile cpu run --rm audio-enhancer /input/file.opus -o /output/file.flac
+
+services:
+  # ============================================================================
+  # ROCm (AMD GPU) - RX 6000/7000 series
+  # ============================================================================
+  audio-enhancer-rocm:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        GPU_TYPE: rocm
+    image: audio-enhancer:rocm
+    profiles:
+      - rocm
+    devices:
+      - /dev/kfd:/dev/kfd
+      - /dev/dri:/dev/dri
+    group_add:
+      - video
+      - render
+    environment:
+      - HSA_OVERRIDE_GFX_VERSION=10.3.0  # RX 6000 series (gfx1030/1031/1032)
+      - PYTORCH_HIP_ALLOC_CONF=expandable_segments:True
+    volumes:
+      - ./input:/input:ro
+      - ./output:/output
+    working_dir: /app
+    entrypoint: ["uv", "run", "audio-enhancer"]
+
+  # ============================================================================
+  # CUDA (NVIDIA GPU)
+  # ============================================================================
+  audio-enhancer-cuda:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        GPU_TYPE: cuda
+    image: audio-enhancer:cuda
+    profiles:
+      - cuda
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    volumes:
+      - ./input:/input:ro
+      - ./output:/output
+    working_dir: /app
+    entrypoint: ["uv", "run", "audio-enhancer"]
+
+  # ============================================================================
+  # CPU only (no GPU)
+  # ============================================================================
+  audio-enhancer-cpu:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        GPU_TYPE: cpu
+    image: audio-enhancer:cpu
+    profiles:
+      - cpu
+    volumes:
+      - ./input:/input:ro
+      - ./output:/output
+    working_dir: /app
+    entrypoint: ["uv", "run", "audio-enhancer"]
