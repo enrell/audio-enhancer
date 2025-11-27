@@ -1,5 +1,5 @@
 [project]
-name = "audio-recostructor"
+name = "audio-enhancer"
 version = "0.1.0"
 description = "Advanced audio restoration pipeline with neural super-resolution and denoising"
 readme = "README.md"
@@ -21,10 +21,10 @@ dependencies = [
 # resemble = ["resemble-enhance>=0.0.1"]
 
 [project.scripts]
-audio-reconstructor = "audio_recostructor.main:main"
+audio-enhancer = "audio_enhancer.main:main"
 
 [project.gui-scripts]
-audio-reconstructor-gui = "audio_recostructor.gui:main"
+audio-enhancer-gui = "audio_enhancer.gui:main"
 
 [dependency-groups]
 dev = [
@@ -53,4 +53,4 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/audio_recostructor"]
+packages = ["src/audio_enhancer"]

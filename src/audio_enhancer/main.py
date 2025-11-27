@@ -1,4 +1,4 @@
-"""CLI entry point for Audio Reconstructor."""
+"""CLI entry point for Audio Enhancer."""
 
 import argparse
 import sys
@@ -11,7 +11,7 @@ from .gpu import detect_gpu
 def main() -> None:
     """Main CLI entry point."""
     parser = argparse.ArgumentParser(
-        description="Audio Reconstructor - Advanced audio restoration pipeline"
+        description="Audio Enhancer - Recover quality from compressed audio"
     )
     parser.add_argument(
         "input",

@@ -1,4 +1,4 @@
-"""Tkinter GUI for Audio Reconstructor."""
+"""Tkinter GUI for Audio Enhancer."""
 
 import queue
 import threading
@@ -12,12 +12,12 @@ from .gpu import GPUBackend, detect_gpu
 from .pipeline import PipelineConfig, StageConfig
 
 
-class AudioReconstructorGUI:
-    """Main GUI application for Audio Reconstructor."""
+class AudioEnhancerGUI:
+    """Main GUI application for Audio Enhancer."""
 
     def __init__(self):
         self.root = tk.Tk()
-        self.root.title("Audio Reconstructor")
+        self.root.title("Audio Enhancer")
         self.root.geometry("800x700")
         self.root.minsize(700, 600)
 
@@ -418,7 +418,7 @@ class AudioReconstructorGUI:
 
 def main() -> None:
     """Main entry point for GUI."""
-    app = AudioReconstructorGUI()
+    app = AudioEnhancerGUI()
     app.run()
 
 

@@ -1,11 +1,11 @@
-# Audio Reconstructor
+# Audio Enhancer
 
 Recover audio quality lost from lossy compression. Transform low-bitrate audio (YouTube 127kbps opus/webm) back to high-quality FLAC/opus with restored high frequencies and improved depth.
 
 ## What It Does
 
 ```
-Original FLAC (studio) → 127kbps opus (YouTube) → Audio Reconstructor → High-quality FLAC
+Original FLAC (studio) → 127kbps opus (YouTube) → Audio Enhancer → High-quality FLAC
 ```
 
 The pipeline uses **AudioSR** (neural super-resolution) to recover frequencies lost during compression, then applies professional mastering for clean output.
@@ -27,19 +27,15 @@ The pipeline uses **AudioSR** (neural super-resolution) to recover frequencies l
 ## Installation
 
 ```bash
-# Clone repository
-git clone https://github.com/enrell/audio-recostructor.git
-cd audio-recostructor
+# Clone repository with submodules
+git clone --recurse-submodules https://github.com/enrell/audio-enhancer.git
+cd audio-enhancer
 
 # Install with uv (recommended)
 uv sync
 
-# Install AudioSR in separate venv (has numpy version conflicts)
-cd audiosr_env
-uv venv --python 3.10
-uv pip install torch torchaudio --index-url https://download.pytorch.org/whl/rocm6.2
-uv pip install audiosr matplotlib setuptools
-cd ..
+# Set up AudioSR environment (separate venv due to numpy conflicts)
+./scripts/setup_audiosr.sh
 ```
 
 ## Usage
@@ -48,22 +44,22 @@ cd ..
 
 ```bash
 # Basic usage - super resolution + mastering (default)
-uv run audio-reconstructor input.opus -o output.flac
+uv run audio-enhancer input.opus -o output.flac
 
 # With optional stages
-uv run audio-reconstructor input.mp3 -o output.flac --denoise --harmonic
+uv run audio-enhancer input.mp3 -o output.flac --denoise --harmonic
 
 # Enable loudness normalization
-uv run audio-reconstructor input.opus -o output.flac --normalize
+uv run audio-enhancer input.opus -o output.flac --normalize
 
 # Output formats: flac, wav, ogg, opus
-uv run audio-reconstructor input.webm -o output.opus --format opus
+uv run audio-enhancer input.webm -o output.opus --format opus
 ```
 
 ### GUI
 
 ```bash
-uv run audio-reconstructor --gui
+uv run audio-enhancer --gui
 ```
 
 ### Options
@@ -111,7 +107,7 @@ Tested on RX 6600 (8GB VRAM). Uses chunked processing to fit within VRAM limits.
 
 ```bash
 # Check GPU detection
-uv run audio-reconstructor --info
+uv run audio-enhancer --info
 ```
 
 ### NVIDIA CUDA
@@ -125,8 +121,8 @@ uv pip install torch torchaudio --index-url https://download.pytorch.org/whl/cu1
 ## Project Structure
 
 ```
-audio-recostructor/
-├── src/audio_recostructor/
+audio-enhancer/
+├── src/audio_enhancer/
 │   ├── core.py              # Pipeline orchestrator
 │   ├── gpu.py               # GPU detection (ROCm/CUDA)
 │   ├── gui.py               # Tkinter GUI
@@ -138,8 +134,10 @@ audio-recostructor/
 │       ├── super_resolution.py  # AudioSR / DSP fallback
 │       ├── harmonic.py      # Harmonic enhancement
 │       └── mastering.py     # Final mastering + export
-├── audiosr_env/             # Separate venv for AudioSR
+├── audiosr_env/             # AudioSR runner script
 │   └── run_audiosr.py       # AudioSR subprocess wrapper
+├── scripts/
+│   └── setup_audiosr.sh     # AudioSR venv setup script
 └── pyproject.toml
 ```
 

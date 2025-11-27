@@ -9,7 +9,7 @@ wheels/
 # Virtual environments
 .venv
 
-# AudioSR venv (created during setup)
-audiosr_env/
+# AudioSR venv (keep run_audiosr.py, ignore .venv)
+audiosr_env/.venv/
 
 gpucore*
