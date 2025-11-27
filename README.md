@@ -1,0 +1,164 @@
+# Audio Reconstructor
+
+Recover audio quality lost from lossy compression. Transform low-bitrate audio (YouTube 127kbps opus/webm) back to high-quality FLAC/opus with restored high frequencies and improved depth.
+
+## What It Does
+
+```
+Original FLAC (studio) → 127kbps opus (YouTube) → Audio Reconstructor → High-quality FLAC
+```
+
+The pipeline uses **AudioSR** (neural super-resolution) to recover frequencies lost during compression, then applies professional mastering for clean output.
+
+## Features
+
+- **Super Resolution** - Neural network (AudioSR) recovers lost high frequencies from compression
+- **Denoising** - Optional noise reduction for noisy recordings (noisereduce + GPU acceleration)
+- **Harmonic Enhancement** - Optional harmonic exciter and stereo widening
+- **Final Mastering** - Soft limiter, optional loudness normalization, dithering
+- **AMD ROCm Support** - Full GPU acceleration on AMD RX 6000/7000 series
+
+## Requirements
+
+- Python 3.10-3.12
+- FFmpeg (for audio extraction)
+- AMD GPU with ROCm 6.2+ or NVIDIA GPU with CUDA
+
+## Installation
+
+```bash
+# Clone repository
+git clone https://github.com/enrell/audio-recostructor.git
+cd audio-recostructor
+
+# Install with uv (recommended)
+uv sync
+
+# Install AudioSR in separate venv (has numpy version conflicts)
+cd audiosr_env
+uv venv --python 3.10
+uv pip install torch torchaudio --index-url https://download.pytorch.org/whl/rocm6.2
+uv pip install audiosr matplotlib setuptools
+cd ..
+```
+
+## Usage
+
+### CLI
+
+```bash
+# Basic usage - super resolution + mastering (default)
+uv run audio-reconstructor input.opus -o output.flac
+
+# With optional stages
+uv run audio-reconstructor input.mp3 -o output.flac --denoise --harmonic
+
+# Enable loudness normalization
+uv run audio-reconstructor input.opus -o output.flac --normalize
+
+# Output formats: flac, wav, ogg, opus
+uv run audio-reconstructor input.webm -o output.opus --format opus
+```
+
+### GUI
+
+```bash
+uv run audio-reconstructor --gui
+```
+
+### Options
+
+| Flag | Description |
+|------|-------------|
+| `--denoise` | Enable denoising (for noisy recordings) |
+| `--harmonic` | Enable harmonic enhancement |
+| `--normalize` | Enable loudness normalization (-14 LUFS) |
+| `--no-super-res` | Skip super-resolution stage |
+| `--format FORMAT` | Output format: flac, wav, ogg, opus (default: flac) |
+| `--sample-rate RATE` | Output sample rate (default: 48000) |
+| `--gui` | Launch GUI mode |
+| `--info` | Show GPU and system info |
+
+## Pipeline Stages
+
+### 1. Extraction
+Extracts audio from any format (mp3, opus, webm, ogg, etc.) using FFmpeg, resamples to target sample rate.
+
+### 2. Super Resolution (AudioSR)
+Neural network that reconstructs high frequencies lost during lossy compression. Runs in a separate Python environment due to numpy version conflicts.
+
+Falls back to DSP-based bandwidth extension if AudioSR fails or runs out of VRAM.
+
+### 3. Denoising (Optional)
+GPU-accelerated noise reduction using noisereduce. Processes audio in chunks to manage VRAM usage.
+
+### 4. Harmonic Enhancement (Optional)
+- Harmonic exciter (soft saturation for warmth)
+- Transient shaping
+- High-shelf EQ for "air"
+- Stereo widening
+
+### 5. Final Mastering
+- Soft-knee limiter (prevents clipping)
+- Optional loudness normalization to -14 LUFS
+- TPDF dithering for bit-depth reduction
+
+## GPU Support
+
+### AMD ROCm
+
+Tested on RX 6600 (8GB VRAM). Uses chunked processing to fit within VRAM limits.
+
+```bash
+# Check GPU detection
+uv run audio-reconstructor --info
+```
+
+### NVIDIA CUDA
+
+Should work with CUDA-enabled GPUs. Install PyTorch with CUDA instead of ROCm:
+
+```bash
+uv pip install torch torchaudio --index-url https://download.pytorch.org/whl/cu121
+```
+
+## Project Structure
+
+```
+audio-recostructor/
+├── src/audio_recostructor/
+│   ├── core.py              # Pipeline orchestrator
+│   ├── gpu.py               # GPU detection (ROCm/CUDA)
+│   ├── gui.py               # Tkinter GUI
+│   ├── main.py              # CLI entry point
+│   └── pipeline/
+│       ├── base.py          # Base classes
+│       ├── extraction.py    # Audio extraction (FFmpeg)
+│       ├── denoise.py       # Noise reduction
+│       ├── super_resolution.py  # AudioSR / DSP fallback
+│       ├── harmonic.py      # Harmonic enhancement
+│       └── mastering.py     # Final mastering + export
+├── audiosr_env/             # Separate venv for AudioSR
+│   └── run_audiosr.py       # AudioSR subprocess wrapper
+└── pyproject.toml
+```
+
+## Troubleshooting
+
+### AudioSR runs out of VRAM
+AudioSR requires ~7GB VRAM. If it fails, the pipeline automatically falls back to DSP-based bandwidth extension.
+
+### "No module named 'pkg_resources'"
+```bash
+cd audiosr_env && uv pip install setuptools
+```
+
+### ROCm not detected
+Ensure ROCm is installed and `HSA_OVERRIDE_GFX_VERSION` is set for your GPU:
+```bash
+export HSA_OVERRIDE_GFX_VERSION=10.3.0  # For RX 6600
+```
+
+## License
+
+MIT
