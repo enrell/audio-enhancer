@@ -9,4 +9,7 @@ wheels/
 # Virtual environments
 .venv
 
+# AudioSR venv (created during setup)
+audiosr_env/
+
 gpucore*
