@@ -1,6 +1,6 @@
 # Audio Enhancer
 
-Recover audio quality lost from lossy compression. Transform low-bitrate audio (YouTube 127kbps opus/webm) back to high-quality FLAC/opus with restored high frequencies and improved depth.
+Enhance audio quality lost from lossy compression using AI-powered super-resolution. Transform low-bitrate audio (YouTube 127kbps opus/webm) into high-quality FLAC/opus with synthetically generated high frequencies and improved depth.
 
 ## What It Does
 
@@ -8,11 +8,13 @@ Recover audio quality lost from lossy compression. Transform low-bitrate audio (
 Original FLAC (studio) → 127kbps opus (YouTube) → Audio Enhancer → High-quality FLAC
 ```
 
-The pipeline uses **AudioSR** (neural super-resolution) to recover frequencies lost during compression, then applies professional mastering for clean output.
+The pipeline uses **AudioSR** (neural super-resolution) to *synthesize* high-frequency content lost during compression. Unlike true reconstruction (which would require recovering the original data), AudioSR generates plausible-sounding high frequencies using patterns learned from training data. The result is then professionally mastered for clean output.
+
+> **Note:** Lossy compression permanently discards high-frequency data. AudioSR "hallucinates" new content that sounds natural - similar to how AI image upscaling generates plausible details rather than recovering the original pixels.
 
 ## Features
 
-- **Super Resolution** - Neural network (AudioSR) recovers lost high frequencies from compression
+- **Super Resolution** - Neural network (AudioSR) generates synthetic high frequencies to replace those lost in compression
 - **Denoising** - Optional noise reduction for noisy recordings (noisereduce + GPU acceleration)
 - **Harmonic Enhancement** - Optional harmonic exciter and stereo widening
 - **Final Mastering** - Soft limiter, optional loudness normalization, dithering
@@ -114,9 +116,11 @@ docker compose --profile rocm run --rm audio-enhancer-rocm /input/myfile.opus -o
 Extracts audio from any format (mp3, opus, webm, ogg, etc.) using FFmpeg, resamples to target sample rate.
 
 ### 2. Super Resolution (AudioSR)
-Neural network that reconstructs high frequencies lost during lossy compression. Runs in a separate Python environment due to numpy version conflicts.
 
-Falls back to DSP-based bandwidth extension if AudioSR fails or runs out of VRAM.
+Neural network (latent diffusion model) that *generates* high-frequency content lost during lossy compression. AudioSR synthesizes plausible high frequencies based on patterns learned from high-quality audio training data - it cannot recover the actual original data that was permanently discarded by the codec.
+
+- Uses DDIM sampling with configurable steps and guidance scale
+- Falls back to DSP-based bandwidth extension (harmonic generation) if AudioSR fails or runs out of VRAM
 
 ### 3. Denoising (Optional)
 GPU-accelerated noise reduction using noisereduce. Processes audio in chunks to manage VRAM usage.
